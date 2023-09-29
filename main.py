@@ -22,7 +22,9 @@ def Create_NewUser(name: str, password: str):
         h += ord(i)
 
     cur.execute(f"""INSERT INTO Users(username, password, salt, created_at, updated_at) 
-                VALUES ("{name}", "{h}", "{salt}", "{datetime.now().strftime('%d.%m.%Y %h:%m:%s')}", "{datetime.now().strftime('%d.%m.%Y %h:%m:%s')}")""")
+                VALUES ("{name}", "{h}", "{salt}", "{datetime.now().strftime('%d.%m.%Y %H:%M:%S')}", "{datetime.now().strftime('%d.%m.%Y %H:%M:%S')}")""")
+
+    id = list(cur.execute(f"""select id from Users where username = "{name}" and password = {h} """))[0]
 
     con.commit()
     con.close()
@@ -30,7 +32,7 @@ def Create_NewUser(name: str, password: str):
     return {
         "status": "ok",
         "data": None,
-        "details": "Пользователь создан"
+        "details": f"Пользователь создан, ваш id {id}"
     }
 
 
@@ -38,7 +40,7 @@ def auntifications(password, id):
     con = sqlite3.connect("DB.db", check_same_thread=False)
     cur = con.cursor()
 
-    user = list(cur.execute(f"""select * from Users where id = "{id}" """))[0]
+    user = list(cur.execute(f"""select * from Users where id = "{id}" """))[0][0]
 
     h = 0
     for i in password + user[3] + local_parameter:
@@ -60,12 +62,12 @@ def auntifications(password, id):
 
 
 @app.get("/{id}")
-def Read(password: str, id: int = 0):
+def Read_user(password: str, id: int = 0):
     return auntifications(password, id)
 
 
 @app.patch("/{id}")
-def update(what_to_update: str, what_to_change: str, password: str, id: int = 0):
+def update_user(what_to_update: str, what_to_change: str, password: str, id: int = 0):
     con = sqlite3.connect("DB.db", check_same_thread=False)
     cur = con.cursor()
 
@@ -74,7 +76,7 @@ def update(what_to_update: str, what_to_change: str, password: str, id: int = 0)
     if result['status'] == 'ok':
         if what_to_update != 'password':
             cur.execute(f"""UPDATE Users SET username = "{what_to_change}" WHERE id = {result['data'][0]}""")
-            cur.execute(f'''UPDATE Users SET update_at = "{datetime.now().strftime('%d.%m.%Y %h:%m:%s')}" ''')
+            cur.execute(f'''UPDATE Users SET update_at = "{datetime.now().strftime('%d.%m.%Y %H:%M:%S')}" ''')
             con.commit()
             con.close()
 
@@ -103,7 +105,7 @@ def update(what_to_update: str, what_to_change: str, password: str, id: int = 0)
 
 
 @app.delete('/{id}')
-def Del(password, id):
+def Del_user(password, id):
     con = sqlite3.connect("DB.db", check_same_thread=False)
     cur = con.cursor()
 
